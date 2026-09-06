@@ -5,7 +5,6 @@ from db import ENGINE
 from decimal import Decimal
 
 
-# userテーブルのモデルUserTableを定義
 class UserTable(Base):
     __tablename__ = 'users'
     user_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -30,6 +29,21 @@ class User(BaseModel):
     #Giao tiếp giữa pydantic và sqlalchemy trong khi pydantic đi kiếm kiểu dic user[usename] còn sqlalchemy lại trả về attribute user.usename
     model_config= {"from_attributes": True}
 
+#không pass
+class UserResponse(BaseModel):
+    user_id: int
+    username: str
+    full_name: str
+    phone_number: str
+    email: str | None = None
+    available_balance: Decimal
+    version: int
+    
+    model_config = {"from_attributes": True}
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
 
 def main():
     Base.metadata.create_all(bind=ENGINE)
