@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TDTU iBanking — Đóng học phí</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark">TĐT</span>
+      <span class="brand-name">iBanking <em>· Đóng học phí</em></span>
+    </div>
+    <div id="session-info" class="session-info hidden">
+      <span id="session-name"></span>
+      <button id="logout-btn" class="link-btn">Đăng xuất</button>
+    </div>
+  </div>
+</header>
+
+<main class="app-shell">
+
+  <!-- ===== LOGIN VIEW ===== -->
+  <section id="login-view" class="view login-view">
+    <div class="ledger-card login-card">
+      <h1>Đăng nhập</h1>
+      <p class="muted">Dùng tài khoản iBanking để tra cứu và chuẩn bị đóng học phí.</p>
+
+      <form id="login-form" class="stack" autocomplete="off">
+        <label class="field">
+          <span>Tên đăng nhập</span>
+          <input type="text" id="username" name="username" required autocomplete="username">
+        </label>
+        <label class="field">
+          <span>Mật khẩu</span>
+          <input type="password" id="password" name="password" required autocomplete="current-password">
+        </label>
+        <button type="submit" class="btn btn-primary" id="login-submit">Đăng nhập</button>
+      </form>
+
+      <div id="login-error" class="banner banner-error hidden"></div>
+    </div>
+  </section>
+
+  <!-- ===== DASHBOARD VIEW ===== -->
+  <section id="dashboard-view" class="view dashboard-view hidden">
+    <div class="grid-2">
+
+      <!-- Payer info -->
+      <div class="ledger-card">
+        <h2>Người nộp tiền</h2>
+        <p class="muted small">Lấy tự động từ tài khoản đang đăng nhập — không thể chỉnh sửa.</p>
+        <dl class="info-list" id="payer-info">
+          <div class="info-row"><dt>Họ và tên</dt><dd id="payer-name">—</dd></div>
+          <div class="info-row"><dt>Số điện thoại</dt><dd id="payer-phone" class="mono">—</dd></div>
+          <div class="info-row"><dt>Địa chỉ email</dt><dd id="payer-email" class="mono">—</dd></div>
+        </dl>
+        <div id="payer-error" class="banner banner-error hidden"></div>
+      </div>
+
+      <!-- Tuition lookup -->
+      <div class="ledger-card">
+        <h2>Tra cứu học phí</h2>
+        <p class="muted small">Nhập mã số sinh viên (MSSV) cần đóng học phí — có thể là chính bạn hoặc người khác.</p>
+
+        <form id="lookup-form" class="lookup-form">
+          <label class="field">
+            <span>Mã số sinh viên</span>
+            <input type="text" id="student-id" name="student_id" placeholder="VD: TDTU24001" required>
+          </label>
+          <button type="submit" class="btn btn-accent" id="lookup-submit">Tra cứu</button>
+        </form>
+
+        <div id="lookup-idle" class="empty-state">
+          Kết quả tra cứu sẽ hiển thị tại đây.
+        </div>
+
+        <div id="lookup-error" class="banner banner-error hidden"></div>
+
+        <div id="lookup-result" class="tuition-ticket hidden">
+          <div class="ticket-row">
+            <span class="ticket-label">Sinh viên</span>
+            <span class="ticket-value" id="ticket-student-name">—</span>
+          </div>
+          <div class="ticket-row">
+            <span class="ticket-label">MSSV</span>
+            <span class="ticket-value mono" id="ticket-student-id">—</span>
+          </div>
+          <div class="ticket-row">
+            <span class="ticket-label">Khoản thu</span>
+            <span class="ticket-value" id="ticket-fee-name">—</span>
+          </div>
+          <div class="ticket-divider"></div>
+          <div class="ticket-amount-row">
+            <span class="ticket-label">Số tiền cần thanh toán</span>
+            <span class="ticket-amount mono" id="ticket-amount">—</span>
+          </div>
+          <span class="status-badge" id="ticket-status">Còn phải đóng</span>
+
+          <!-- KHU VỰC NÚT THANH TOÁN -->
+          <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 12px;">
+            <button id="pay-submit" class="btn btn-primary" style="width: 100%;">Xác nhận thanh toán</button>
+            <div id="pay-message" class="banner hidden"></div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
