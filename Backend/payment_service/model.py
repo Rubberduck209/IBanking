@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Numeric, Boolean, DateTime, Fore
 from pydantic import BaseModel
 from db import Base, ENGINE
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # --- SQLALCHEMY MODELS (DATABASE) ---
 
@@ -14,7 +14,9 @@ class TransactionTable(Base):
     student_id = Column(String(255))
     amount = Column(Numeric(15,2))
     status_ = Column(String(50), default="PENDING")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
+    
+    
 
 class OtpCodeTable(Base):
     __tablename__ = 'otp_codes'
@@ -42,6 +44,10 @@ class TransactionResponse(BaseModel):
     created_at: datetime
     
     model_config = {"from_attributes": True}
+
+class OtpVerifyRequest(BaseModel):
+    transaction_id: str
+    otp_code: str
 
 def main():
     Base.metadata.create_all(bind=ENGINE)

@@ -17,7 +17,7 @@ database_name = os.getenv("DB_NAME", "payment_DB")
 # Chuỗi kết nối MySQL chuẩn
 DATABASE_URL = f'mysql+pymysql://{db_user}:{db_pass}@{db_host}:{db_port}/{database_name}?charset=utf8'
 
-ENGINE = create_engine(DATABASE_URL, echo=True)
+ENGINE = create_engine(DATABASE_URL, echo=False)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=ENGINE)
 

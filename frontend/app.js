@@ -24,6 +24,8 @@ const payerError = document.getElementById("payer-error");
 const payerName = document.getElementById("payer-name");
 const payerPhone = document.getElementById("payer-phone");
 const payerEmail = document.getElementById("payer-email");
+const payerBalance = document.getElementById("payer-balnce");
+
 
 const lookupForm = document.getElementById("lookup-form");
 const lookupSubmit = document.getElementById("lookup-submit");
@@ -159,6 +161,7 @@ async function loadPayerInfo() {
     payerName.textContent = payer.full_name || "—";
     payerPhone.textContent = payer.phone_number || "—";
     payerEmail.textContent = payer.email || "—";
+    payerBalance.textContent = payer.balance || "—";
     sessionName.textContent = `Xin chào, ${payer.full_name || ""}`;
   } catch (err) {
     if (err.unauthorized) {

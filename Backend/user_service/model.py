@@ -25,6 +25,7 @@ class UserLogin(BaseModel):
 class PayerInfo(BaseModel):
     full_name: str
     phone_number: str
+    available_balance: Decimal
     email: str | None = None
 
     model_config = {"from_attributes": True}
