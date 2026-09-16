@@ -43,3 +43,24 @@ def get_tuition_info(student_id: str, database: Session = Depends(db.get_db)):
         )
 
     return tuition_record
+
+@app.put("/api/tuitions/{student_id}/status")
+def update_tuition_status(student_id: str, request: model.TuitionStatusUpdate, database: Session = Depends(db.get_db)):
+    """
+    Cập nhật trạng thái học phí của sinh viên
+    """
+    tuition_record = database.query(model.TuitionTable).filter(
+        model.TuitionTable.student_id == student_id
+        ).first()
+
+    if not tuition_record:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy sinh viên với MSSV này."
+        )
+
+    tuition_record.status_ = request.status_
+    database.commit()
+    database.refresh(tuition_record)
+
+    return tuition_record

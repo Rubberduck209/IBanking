@@ -22,6 +22,9 @@ class TuitionResponse(BaseModel):
     status_: str
 
     model_config = {"from_attributes": True}
+    
+class TuitionStatusUpdate(BaseModel):
+    status_: str
 
 def main():
     Base.metadata.create_all(bind=ENGINE)

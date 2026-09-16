@@ -115,3 +115,18 @@ async def get_my_balance(current_user: model.UserTable = Depends(get_current_use
         "full_name": current_user.full_name,
         "available_balance": current_user.available_balance
     }
+    
+@app.post("/users/me/deduct")
+async def deduct_balance(
+    request: model.DeductRequest,
+    current_user: model.UserTable = Depends(get_current_user),
+    database: Session = Depends(db.get_db)
+):
+    current_user.available_balance -= request.amount
+    database.commit()
+    
+    return{
+        "status": "SUCCESS", 
+        "detail": "Đã trừ tiền thành công", 
+        "new_balance": current_user.available_balance
+    }

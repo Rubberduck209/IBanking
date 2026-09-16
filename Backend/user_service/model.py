@@ -21,7 +21,6 @@ class UserLogin(BaseModel):
     password: str
 
 
-
 class PayerInfo(BaseModel):
     full_name: str
     phone_number: str
@@ -35,6 +34,8 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
+class DeductRequest(BaseModel):
+    amount: Decimal
 
 def main():
     Base.metadata.create_all(bind=ENGINE)

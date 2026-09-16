@@ -296,6 +296,7 @@ h2 { font-size: 1.4rem; }
   font-size: 2.1rem;
   font-weight: 600;
   color: var(--ink);
+  white-space: nowrap; 
 }
 
 .status-badge {
