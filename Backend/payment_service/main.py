@@ -232,8 +232,34 @@ async def verify_transaction_otp(
     if otp_record.code_ != verify_data.otp_code:
         raise HTTPException(status_code=400, detail="Mã OTP không chính xác")
 
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        try:
+            deduct_payload = {"amount": float(transaction.amount)}
+            deduct_res = await client.post(
+                f"{USER_SERVICE_URL}/users/me/deduct", 
+                json=deduct_payload, 
+                headers=headers
+            )
+            if deduct_res.status_code != 200:
+                raise HTTPException(status_code=400, detail="Lỗi: Không thể trừ tiền từ User Service")
+            
+            
+            tuition_payload = {"status_": "Đã thanh toán"}
+            tuition_res = await client.put(
+                f"{TUITION_SERVICE_URL}/api/tuitions/{transaction.student_id}/status",
+                json=tuition_payload,
+                headers=headers 
+            )
+            if tuition_res.status_code != 200:
+                
+                raise HTTPException(status_code=400, detail="Lỗi: Trừ tiền thành công nhưng không thể gạch nợ học phí")
+
+        except httpx.RequestError as e:
+            print(f"Lỗi gọi API liên thông: {e}")
+            raise HTTPException(status_code=503, detail="Mất kết nối đến hệ thống tài khoản hoặc học phí")
     otp_record.is_used = True
     transaction.status_ = "SUCCESS"
     database.commit()
 
     return {"status": "SUCCESS", "detail": "Xác thực OTP và thanh toán thành công!"}
+    
