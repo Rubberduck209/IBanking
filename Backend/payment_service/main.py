@@ -1,3 +1,4 @@
+import jwt
 import os
 import uuid
 import random
@@ -20,17 +21,27 @@ import model
 load_dotenv()
 
 
-
-# Cấu hình CORS để Frontend gọi POST không bị lỗi
-
-
 USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "http://127.0.0.1:8000")
 TUITION_SERVICE_URL = os.getenv("TUITION_SERVICE_URL", "http://127.0.0.1:8001")
 MAIL_USERNAME = os.getenv("MAIL_USERNAME")
 MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 
 security = HTTPBearer()
 
+#coi lai
+def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depends(security)) -> int:
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("user_id")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Token không hợp lệ")
+        return user_id
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Token không hợp lệ hoặc đã hết hạn")
+    
 async def cleanup_expired_transactions():
     while True:
         try:
@@ -98,6 +109,20 @@ def send_otp_email(to_email: str, otp_code: str):
 @app.get("/transactions", response_model=list[model.TransactionResponse])
 def get_transactions(database: Session = Depends(db.get_db)):
     transactions = database.query(model.TransactionTable).all()
+    return transactions
+
+# Coi lai
+@app.get("/transactions/me", response_model=list[model.TransactionResponse])
+def get_my_transactions(
+    database: Session = Depends(db.get_db),
+    user_id: int = Depends(get_current_user_id)
+):
+    transactions = (
+        database.query(model.TransactionTable)
+        .filter(model.TransactionTable.user_id == user_id)
+        .order_by(model.TransactionTable.created_at.desc())
+        .all()
+    )
     return transactions
 
 @app.get("/transactions/{transaction_id}", response_model=model.TransactionResponse)

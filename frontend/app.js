@@ -367,7 +367,9 @@ otpSubmit.addEventListener("click", async () => {
     ticketStatus.textContent = "Đã thanh toán";
     ticketStatus.style.background = "var(--success-bg)";
     ticketStatus.style.color = "var(--success)";
-    loadHistory();
+    
+    await loadPayerInfo();
+    await loadHistory();
   } catch (err) {
     payMessage.className = "banner banner-error";
     showBanner(payMessage, err.message);
