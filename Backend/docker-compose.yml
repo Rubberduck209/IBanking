@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Thêm Container MySQL
   mysql_db:
@@ -7,7 +5,7 @@ services:
     container_name: ibanking_mysql
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
-      MYSQL_ROOT_PASSWORD: 12345678  # Mật khẩu root bạn đang dùng
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in Backend/.env}
     ports:
       - "3307:3306"
     volumes:
@@ -17,6 +15,8 @@ services:
   user_service:
     build: ./user_service
     container_name: ibanking_user_service
+    env_file:
+      - ./user_service/.env
     ports:
       - "8000:8000"
     depends_on:
@@ -25,6 +25,8 @@ services:
   tuition_service:
     build: ./tuition_service
     container_name: ibanking_tuition_service
+    env_file:
+      - ./tuition_service/.env
     ports:
       - "8001:8000"
     depends_on:
@@ -33,6 +35,8 @@ services:
   payment_service:
     build: ./payment_service
     container_name: ibanking_payment_service
+    env_file:
+      - ./payment_service/.env
     ports:
       - "8002:8000"
     depends_on:
