@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -105,6 +105,45 @@ def send_otp_email(to_email: str, otp_code: str):
             server.sendmail(MAIL_USERNAME, to_email, message.as_string())
     except Exception as e:
         print(f"Lỗi gửi email: {e}")
+        
+# coi lai
+def send_success_email(to_email: str, transaction_id: str, amount: float, student_id: str):
+    if not MAIL_USERNAME or not MAIL_PASSWORD:
+        print("Cảnh báo: Chưa cấu hình Email.")
+        return
+
+    # Định dạng số tiền cho đẹp (VD: 15500000.0 -> 15.500.000)
+    formatted_amount = f"{amount:,.0f}".replace(",", ".")
+    
+    # Soạn nội dung email
+    content = f"""
+    Kính gửi Quý khách,
+
+    Giao dịch thanh toán học phí của Quý khách đã được thực hiện thành công.
+    
+    THÔNG TIN GIAO DỊCH:
+    - Mã giao dịch: {transaction_id}
+    - Mã số sinh viên: {student_id}
+    - Số tiền thanh toán: {formatted_amount} VNĐ
+    - Trạng thái: THÀNH CÔNG
+    - Thời gian xác nhận: {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}
+
+    Cảm ơn Quý khách đã sử dụng dịch vụ iBanking!
+    """
+    
+    message = MIMEText(content)
+    message["Subject"] = "Xác nhận giao dịch thanh toán học phí thành công"
+    message["From"] = MAIL_USERNAME
+    message["To"] = to_email
+
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(MAIL_USERNAME, MAIL_PASSWORD)
+            server.sendmail(MAIL_USERNAME, to_email, message.as_string())
+            print(f"--> Đã gửi email xác nhận thành công cho giao dịch {transaction_id}")
+    except Exception as e:
+        print(f"Lỗi gửi email xác nhận thành công: {e}")
         
 @app.get("/transactions", response_model=list[model.TransactionResponse])
 def get_transactions(database: Session = Depends(db.get_db)):
@@ -208,6 +247,7 @@ async def create_transaction(
 @app.post("/transactions/verify-otp")
 async def verify_transaction_otp(
     verify_data: model.OtpVerifyRequest,
+    background_tasks: BackgroundTasks,
     database: Session = Depends(db.get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
@@ -216,6 +256,8 @@ async def verify_transaction_otp(
         try:
             headers = {"Authorization": f"Bearer {token}"}
             user_bal_response = await client.get(f"{USER_SERVICE_URL}/users/me/balance", headers=headers)
+            #New
+            user_info_response = await client.get(f"{USER_SERVICE_URL}/users/me/payer-info", headers=headers)
         except httpx.RequestError:
             raise HTTPException(status_code=503, detail="Lỗi kết nối mạng nội bộ")
         
@@ -223,6 +265,8 @@ async def verify_transaction_otp(
         raise HTTPException(status_code=401, detail="Lỗi xác thực phiên đăng nhập")
     
     auth_user_id = user_bal_response.json()["user_id"]
+    #New
+    user_email = user_info_response.json()["email"]
     
     transaction = database.query(model.TransactionTable).filter(
         model.TransactionTable.transaction_id == verify_data.transaction_id
@@ -285,6 +329,16 @@ async def verify_transaction_otp(
     otp_record.is_used = True
     transaction.status_ = "SUCCESS"
     database.commit()
+    
+    #New
+    if user_email:
+        background_tasks.add_task(
+            send_success_email, 
+            to_email=user_email, 
+            transaction_id=transaction.transaction_id, 
+            amount=transaction.amount, 
+            student_id=transaction.student_id
+        )
 
     return {"status": "SUCCESS", "detail": "Xác thực OTP và thanh toán thành công!"}
     

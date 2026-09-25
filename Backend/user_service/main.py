@@ -117,15 +117,39 @@ async def get_my_balance(current_user: model.UserTable = Depends(get_current_use
     }
     
 @app.post("/users/me/deduct")
-async def deduct_balance(
+def deduct_balance(
     request: model.DeductRequest,
     current_user: model.UserTable = Depends(get_current_user),
     database: Session = Depends(db.get_db)
 ):
-    current_user.available_balance -= request.amount
+    # 1. Kiểm tra số dư ở tầng logic trước
+    if current_user.available_balance < request.amount:
+        raise HTTPException(status_code=400, detail="Số dư không đủ để trừ tiền")
+    
+    # 2. Xử lý đồng thời (Concurrency) bằng Optimistic Locking
+    updated_rows = database.query(model.UserTable).filter(
+        model.UserTable.user_id == current_user.user_id,
+        model.UserTable.version == current_user.version,      # Đảm bảo chưa có ai thay đổi dữ liệu
+        model.UserTable.available_balance >= request.amount   # Chốt chặn số dư lần cuối ở DB
+    ).update({
+        "available_balance": current_user.available_balance - request.amount,
+        "version": current_user.version + 1                   # Tăng version lên 1
+    })
+
+    # 3. Kiểm tra xem database có cho phép cập nhật không
+    if updated_rows == 0:
+        database.rollback()
+        raise HTTPException(
+            status_code=409, 
+            detail="Lỗi đồng thời: Tài khoản đang biến động hoặc số dư đã không còn đủ. Vui lòng thử lại."
+        )
+
     database.commit()
     
-    return{
+    # Lấy lại dữ liệu mới nhất từ database để trả về
+    database.refresh(current_user)
+    
+    return {
         "status": "SUCCESS", 
         "detail": "Đã trừ tiền thành công", 
         "new_balance": current_user.available_balance

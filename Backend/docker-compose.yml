@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  user_service:
+    build: ./user_service
+    container_name: user_service
+    ports:
+      - "8000:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Giúp container kết nối được với MySQL ở máy host (XAMPP/MySQL Workbench)
+
+  tuition_service:
+    build: ./tuition_service
+    container_name: tuition_service
+    ports:
+      - "8001:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  payment_service:
+    build: ./payment_service
+    container_name: payment_service
+    ports:
+      - "8002:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

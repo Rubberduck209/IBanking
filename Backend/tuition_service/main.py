@@ -57,7 +57,7 @@ def update_tuition_status(
     database: Session = Depends(db.get_db),
 ):
     """
-    Cập nhật trạng thái học phí của sinh viên
+    Cập nhật trạng thái học phí của sinh viên (Có xử lý Concurrency)
     """
     tuition_record = (
         database.query(model.TuitionTable)
@@ -70,8 +70,31 @@ def update_tuition_status(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Không tìm thấy sinh viên với MSSV này.",
         )
+        
+    # 1. Chặn sớm nếu học phí đã được thanh toán
+    if tuition_record.status_ == "Đã thanh toán":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Khoản học phí này đã được thanh toán."
+        )
 
-    tuition_record.status_ = request.status_
+    # 2. Xử lý đồng thời (Concurrency) bằng Optimistic Locking
+    updated_rows = database.query(model.TuitionTable).filter(
+        model.TuitionTable.student_id == student_id,
+        model.TuitionTable.version == tuition_record.version  # Khóa lạc quan: Đảm bảo version chưa bị đổi
+    ).update({
+        "status_": request.status_,
+        "version": tuition_record.version + 1                 # Tăng version lên 1
+    })
+
+    # 3. Kiểm tra xem database có cho phép cập nhật không
+    if updated_rows == 0:
+        database.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Lỗi đồng thời: Khoản học phí này vừa được một người khác thanh toán thành công."
+        )
+
     database.commit()
     database.refresh(tuition_record)
 
