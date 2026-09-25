@@ -14,7 +14,7 @@ db_pass = os.getenv("DB_PASS", "12345678")
 database_name = os.getenv("DB_NAME", "tuition_db")
 
 # Chuỗi kết nối MySQL
-DATABASE_URL = f'mysql+pymysql://{db_user}:{db_pass}@{db_host}:{db_port}/{database_name}?charset=utf8'
+DATABASE_URL = f'mysql+pymysql://{db_user}:{db_pass}@{db_host}:{db_port}/{database_name}?charset=utf8mb4&use_unicode=1'
 
 ENGINE = create_engine(DATABASE_URL, echo=True)
 

@@ -1,26 +1,43 @@
 version: '3.8'
 
 services:
+  # Thêm Container MySQL
+  mysql_db:
+    image: mysql:8.0
+    container_name: ibanking_mysql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345678  # Mật khẩu root bạn đang dùng
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql    # Giữ lại dữ liệu kể cả khi tắt Docker
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql # Tự động chạy script khi build lần đầu
+
   user_service:
     build: ./user_service
-    container_name: user_service
+    container_name: ibanking_user_service
     ports:
       - "8000:8000"
-    extra_hosts:
-      - "host.docker.internal:host-gateway" # Giúp container kết nối được với MySQL ở máy host (XAMPP/MySQL Workbench)
+    depends_on:
+      - mysql_db   # Đợi MySQL chạy lên trước
 
   tuition_service:
     build: ./tuition_service
-    container_name: tuition_service
+    container_name: ibanking_tuition_service
     ports:
       - "8001:8000"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    depends_on:
+      - mysql_db
 
   payment_service:
     build: ./payment_service
-    container_name: payment_service
+    container_name: ibanking_payment_service
     ports:
       - "8002:8000"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    depends_on:
+      - mysql_db
+
+# Khai báo volume để lưu trữ dữ liệu MySQL bền vững
+volumes:
+  mysql_data:

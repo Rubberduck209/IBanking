@@ -15,7 +15,7 @@ db_port = os.getenv("DB_PORT", "3306")
 database_name = os.getenv("DB_NAME", "payment_DB")
 
 # Chuỗi kết nối MySQL chuẩn
-DATABASE_URL = f'mysql+pymysql://{db_user}:{db_pass}@{db_host}:{db_port}/{database_name}?charset=utf8'
+DATABASE_URL = f'mysql+pymysql://{db_user}:{db_pass}@{db_host}:{db_port}/{database_name}?charset=utf8mb4&use_unicode=1'
 
 ENGINE = create_engine(DATABASE_URL, echo=False)
 
